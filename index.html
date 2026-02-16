@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minhas Tarefas - Sistema de Fainas</title>
+    
+    <!-- PWA Meta Tags para iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fainas">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1584/1584892.png">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #1f2937;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --safe-area-top: env(safe-area-inset-top);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overscroll-behavior-y: contain;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--light);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-top: var(--safe-area-top);
+        }
+
+        /* ============ HEADER ============ */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px;
+            padding-top: calc(20px + var(--safe-area-top));
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-badge.online::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ============ NAVIGATION ============ */
+        .nav-tabs {
+            background: white;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab {
+            padding: 16px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            position: relative;
+            transition: color 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        /* ============ MAIN CONTAINER ============ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .content-area {
+            padding: 20px 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============ HOME TAB ============ */
+        .category-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .category-title-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .category-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: var(--light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            accent-color: var(--primary);
+        }
+
+        .task-text {
+            font-size: 14px;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 1;
+        }
+
+        .add-task-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .add-task-form input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .add-task-btn {
+            padding: 12px 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        /* ============ FAINAS TAB ============ */
+        .fainas-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .fainas-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .faina-tab-btn {
+            padding: 10px 16px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .faina-tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .faina-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .faina-card-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .faina-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .faina-task-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        /* ============ MODAL ============ */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #e5e7eb; color: var(--text-primary); }
+
+        /* ============ PDF TAB ============ */
+        .pdf-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pdf-preview {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-height: 400px;
+        }
+
+        /* iPhone Optimization */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 20px; }
+            .nav-tab { padding: 12px 10px; font-size: 13px; }
+            .btn { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <h1>⚓ Minhas Tarefas</h1>
+                <div class="header-subtitle">Sistema de Gerenciamento de Fainas</div>
+            </div>
+            <div class="status-badge online">Online</div>
+        </div>
+    </header>
+
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="home">🏠 Home</button>
+        <button class="nav-tab" data-tab="fainas">⚙️ Fainas</button>
+        <button class="nav-tab" data-tab="pdf">📄 PDF</button>
+    </nav>
+
+    <main class="container">
+        <div class="content-area">
+            <!-- ABA HOME -->
+            <div id="home" class="tab-content active">
+                <div id="categoriesContainer" class="categories-container">
+                    <!-- Categorias e tarefas serão injetadas aqui -->
+                </div>
+            </div>
+
+            <!-- ABA FAINAS -->
+            <div id="fainas" class="tab-content">
+                <div class="fainas-container">
+                    <div class="fainas-toolbar">
+                        <button class="btn btn-primary" id="addFainaBtn">+ Nova Faina</button>
+                    </div>
+                    <div id="fainasTabs" class="fainas-tabs">
+                        <!-- Abas de fainas salvas -->
+                    </div>
+                    <div id="fainaDetail" class="faina-detail">
+                        <!-- Detalhes da faina selecionada -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA PDF -->
+            <div id="pdf" class="tab-content">
+                <div class="pdf-controls">
+                    <div id="pdfFainaSelector" style="background:white; padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px;">
+                        <p style="font-weight:700; margin-bottom:10px; font-size:14px;">Selecione as fainas para o PDF:</p>
+                        <div id="pdfCheckboxes"></div>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-primary" onclick="app.downloadPdf()">📥 Baixar PDF</button>
+                        <button class="btn btn-accent" style="background:var(--accent); color:white;" onclick="app.shareWhatsApp()">💬 WhatsApp</button>
+                    </div>
+                    <button class="btn btn-danger" style="margin-top:10px;" onclick="app.clearAllData()">🗑️ Apagar Tudo</button>
+                </div>
+                <div id="pdfPreview" class="pdf-preview">
+                    <!-- Preview do PDF -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL NOVA FAINA -->
+    <div id="fainaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" style="font-size:18px;">Nova Faina</h2>
+                <button onclick="app.closeModal('fainaModal')" style="background:none; border:none; font-size:24px;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:700; margin-bottom:8px; font-size:14px;">Nome da Faina</label>
+                    <input type="text" id="fainaName" placeholder="Ex: Faina da Manhã" style="width:100%; padding:12px; border:1px solid var(--border); border-radius:8px;">
+                </div>
+                <div style="font-weight:700; margin-bottom:10px; font-size:14px;">Selecione as Tarefas:</div>
+                <div id="taskSelectorContainer">
+                    <!-- Lista de tarefas dinâmica -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="selectedCount" style="font-size:12px; color:var(--text-secondary); align-self:center; flex:1;">0 selecionadas</div>
+                <button class="btn btn-secondary" onclick="app.closeModal('fainaModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="app.saveFaina()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ DATABASE ============
+        class OfflineDB {
+            constructor() {
+                this.storageKey = 'fainas_db_v3';
+                this.data = this.loadData();
+            }
+
+            loadData() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) return JSON.parse(saved);
+                
+                return {
+                    categories: [
+                        { id: '1', name: 'CHECK LIST SERVIÇO DE AR', tasks: [{ id: '1-1', text: '1 vez na semana fazer a faxina do extrator do imediato e aproveitar dar uma geral. Prox (quarta 11/01)', completed: false }] },
+                        { id: '2', name: 'Café da manhã', tasks: [
+                            { id: '2-1', text: 'Sanduicheira e omeleteira ligada.', completed: false },
+                            { id: '2-2', text: 'Palamentas na mesa (talheres pires, xicara e copo talher do melhorado)', completed: false },
+                            { id: '2-3', text: 'vrf foto', completed: false },
+                            { id: '2-4', text: 'açucar, adiçante, manteiga.', completed: false },
+                            { id: '2-5', text: 'pão e melhorado(faser uma gracimha se for peito de peru, presunto etc)', completed: false },
+                            { id: '2-6', text: 'Agua na mesa', completed: false },
+                            { id: '2-7', text: 'Café e Leite', completed: false }
+                        ]},
+                        { id: '3', name: 'Intervalo', tasks: [{ id: '3-1', text: 'Fazer 2 camarotes VRF com cheint ou mais pegajosos', completed: false }] },
+                        { id: '4', name: 'Almoço', tasks: [
+                            { id: '4-1', text: 'Balcao ligado 10:25.', completed: false },
+                            { id: '4-2', text: 'Verificar o picado e o que poderá precisar.', completed: false },
+                            { id: '4-3', text: '10:30 subir o picado e tapar. (carre e sobremesa)', completed: false },
+                            { id: '4-4', text: '10:40 chamar o SG Dias p Comer', completed: false },
+                            { id: '4-5', text: 'Palamentas (garfos, faca, talher sobremesa,copos na mesa, galheteiro, VRF Foto)', completed: false },
+                            { id: '4-6', text: 'falta copo', completed: false },
+                            { id: '4-7', text: 'Gelo.', completed: false },
+                            { id: '4-8', text: 'Água , jacuba', completed: false },
+                            { id: '4-9', text: 'sobremesa', completed: false },
+                            { id: '4-10', text: 'Palamentas da comida em si.', completed: false },
+                            { id: '4-11', text: 'Fazer café.', completed: false },
+                            { id: '4-12', text: 'O ultimo cara pegou picado desligar balcao', completed: false },
+                            { id: '4-13', text: 'Pós bandeira 17:30 viagem (fechar as janeyylas)', completed: false }
+                        ]},
+                        { id: '5', name: 'Jantar', tasks: [
+                            { id: '5-1', text: 'Balcao ligado 16:25.', completed: false },
+                            { id: '5-2', text: 'Verificar o picado e o que poderá precisar.', completed: false },
+                            { id: '5-3', text: '16:40 subir o picado e tapar.', completed: false },
+                            { id: '5-4', text: 'Palamentas (garfos, faca, talher sobremesa,copos na mesa, galheteiro, VRF Foto) falta copo', completed: false },
+                            { id: '5-5', text: 'Gelo.', completed: false },
+                            { id: '5-6', text: 'Água , jacuba feita e sobremesa.', completed: false },
+                            { id: '5-7', text: 'Palamentas da comida em si.', completed: false },
+                            { id: '5-8', text: 'Fazer café.', completed: false },
+                            { id: '5-9', text: 'O ultimo cara pegou picado desligar balcão', completed: false }
+                        ]},
+                        { id: '6', name: 'SERVIÇO CONTRAMESTRE - AO ASSUMIR', tasks: [
+                            { id: '6-1', text: 'APITO NO BOLSO', completed: false },
+                            { id: '6-2', text: 'Vrf sempre se telefones e PRC estao carregados M2 BNRJ/M3 navios/M6interno.', completed: false },
+                            { id: '6-3', text: 'Olhar se tem papel de controle de generos', completed: false },
+                            { id: '6-4', text: 'Comferir amarraçao do toldo prancha e do navio em si.', completed: false },
+                            { id: '6-5', text: 'Rotina ver foto ou no lobby do auxiliar Tfm e licença ver com OSE na hora.', completed: false },
+                            { id: '6-6', text: 'Controlar entrada de visitantes (identificar empresa/om nip/cpf só deixar entrar com responsavel) e entrada e saída de material(se for generos "conferemte ao portalo) pegar documentaçoes rubricas etc.', completed: false }
+                        ]},
+                        { id: '7', name: 'GSE', tasks: [
+                            { id: '7-1', text: 'Amazonas incendio classe tal no "navio tal"Grupo de socorro extermo guarnecer.', completed: false },
+                            { id: '7-2', text: 'Perguntar ao navio "solicito informar materiais necessários para o GSE".', completed: false },
+                            { id: '7-3', text: 'Ligar pro OSE e avisar', completed: false },
+                            { id: '7-4', text: 'Bolsa verdes são do GSE', completed: false },
+                            { id: '7-5', text: 'Controlar e anotar todo material que vai sair do amazonas e com quem ta.', completed: false },
+                            { id: '7-6', text: 'Ver se ampolas estao com 180bar.', completed: false }
+                        ]},
+                        { id: '8', name: 'MINERVA', tasks: [
+                            { id: '8-1', text: 'Acionado alarme minerva no compartento tal patrulha do cab investigar', completed: false },
+                            { id: '8-2', text: 'Deu bom (area do acionamento do alarme investigado, alarme não confirmado)', completed: false }
+                        ]},
+                        { id: '9', name: 'FAINA COMBUSTÍVEL E MUNIÇÃO', tasks: [
+                            { id: '9-1', text: 'Esticar linha de mangueira', completed: false },
+                            { id: '9-2', text: 'Içar bandeira B', completed: false },
+                            { id: '9-3', text: 'Falar hazarboard', completed: false },
+                            { id: '9-4', text: 'munição proibir transito', completed: false }
+                        ]},
+                        { id: '10', name: 'TELEFONE DE BORDO', tasks: [
+                            { id: '10-1', text: 'Telefone 2 curtos externo um longo externo', completed: false },
+                            { id: '10-2', text: 'Se for empresa chamar o ronda pra ir buscar', completed: false },
+                            { id: '10-3', text: 'colocar telefone do serviço pra carregar a noite (madrugada)', completed: false },
+                            { id: '10-4', text: 'Passar pra algm de bordo digitar numero, tranf do externo flash', completed: false }
+                        ]},
+                        { id: '11', name: 'LICENCIADOS', tasks: [{ id: '11-1', text: 'Anoatar os licenciados e se despedir dos oficiais ,sr mestre e sub s.', completed: false }] },
+                        { id: '12', name: 'Tempo ruim', tasks: [{ id: '12-1', text: 'Olhar defensas e espias se der ruim quarto de serviço ao portaló', completed: false }] },
+                        { id: '13', name: 'BANDEIRA', tasks: [
+                            { id: '13-1', text: 'Nacional 00h fonoclama/4as8 prancha', completed: false },
+                            { id: '13-2', text: 'Faxina de bandeira (ronda) OLHAR SE ELE COLOCOU QUANDO TIVER', completed: false },
+                            { id: '13-3', text: 'Hazarboard de 15 em 15min.', completed: false },
+                            { id: '13-4', text: 'Pesqueiro se tiver perigo avisar a base', completed: false }
+                        ]},
+                        { id: '14', name: 'GÊNEROS e MATERIAIS', tasks: [
+                            { id: '14-1', text: 'Ver a quem pertence se for material comun chamar o responsável pra verificar e receber.', completed: false },
+                            { id: '14-2', text: 'Se eu nao for o mais antigo chamar conferente de serviço ao portalo.', completed: false },
+                            { id: '14-3', text: 'Preencher numero da depois de verificar anotar numero da nota se tiver item frigorífico mesmo se for 1 anotar sim.', completed: false },
+                            { id: '14-4', text: 'Se o gênero tiver ruim mandar voltar anotar na nota oq recebi oq faltou/voltou pegar mimha assinatura e do cara entregar a via dele e ficar com uma.', completed: false }
+                        ]},
+                        { id: '15', name: 'LIXO', tasks: [{ id: '15-1', text: 'Quando o caminhão passar falar no fonoclama : "Amzonas retirar todo lixo de bordo se for muito chamar o quarto de serviço se dor extremo para CB e MN".', completed: false }] },
+                        { id: '16', name: 'ATRACAÇÃO DESATRACAÇÃO', tasks: [{ id: '16-1', text: 'SÓ Ronda e rancheiro', completed: false }] },
+                        { id: '17', name: 'Manobra de Peso', tasks: [{ id: '17-1', text: 'Navio em manobra de peso proibido trânsito a ré da seção echo por (bb/be)', completed: false }] },
+                        { id: '18', name: 'CAV', tasks: [
+                            { id: '18-1', text: 'Horario controlar MASCARA 24 min autonomia a 180 bar', completed: false },
+                            { id: '18-2', text: 'Horario (ant) Team leader B', completed: false },
+                            { id: '18-3', text: '(Pós )contenção', completed: false }
+                        ]},
+                        { id: '19', name: 'Cafeteira de café expresso na praça d\'armas', tasks: [{ id: '19-1', text: 'Inoperante devido problema na engrenagem no infusor', completed: true }] }
+                    ],
+                    fainas: []
+                };
+            }
+
+            saveData() {
+                localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+            }
+
+            addTask(catId, text) {
+                const cat = this.data.categories.find(c => c.id === catId);
+                if (cat) {
+                    cat.tasks.push({ id: catId + '-' + Date.now(), text, completed: false });
+                    this.saveData();
+                }
+            }
+
+            toggleTask(catId, taskId) {
+                const cat = this.data.categories.find(c => c.id === catId);
+                if (cat) {
+                    const task = cat.tasks.find(t => t.id === taskId);
+                    if (task) { task.completed = !task.completed; this.saveData(); }
+                }
+            }
+
+            editTask(catId, taskId, newText) {
+                const cat = this.data.categories.find(c => c.id === catId);
+                if (cat) {
+                    const task = cat.tasks.find(t => t.id === taskId);
+                    if (task) { task.text = newText; this.saveData(); }
+                }
+            }
+
+            deleteTask(catId, taskId) {
+                const cat = this.data.categories.find(c => c.id === catId);
+                if (cat) {
+                    cat.tasks = cat.tasks.filter(t => t.id !== taskId);
+                    this.saveData();
+                }
+            }
+
+            editCategory(catId, newName) {
+                const cat = this.data.categories.find(c => c.id === catId);
+                if (cat) { cat.name = newName; this.saveData(); }
+            }
+
+            deleteCategory(catId) {
+                this.data.categories = this.data.categories.filter(c => c.id !== catId);
+                this.saveData();
+            }
+
+            addFaina(faina) {
+                faina.id = 'faina-' + Date.now();
+                this.data.fainas.push(faina);
+                this.saveData();
+            }
+
+            deleteFaina(id) {
+                this.data.fainas = this.data.fainas.filter(f => f.id !== id);
+                this.saveData();
+            }
+        }
+
+        // ============ APP LOGIC ============
+        class App {
+            constructor() {
+                this.db = new OfflineDB();
+                this.currentTab = 'home';
+                this.currentFainaId = null;
+                this.selectedFainasForPdf = new Set();
+                this.init();
+            }
+
+            init() {
+                this.renderHome();
+                this.setupTabs();
+                document.getElementById('addFainaBtn').onclick = () => this.openFainaModal();
+            }
+
+            setupTabs() {
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.onclick = (e) => {
+                        const target = e.target.dataset.tab;
+                        document.querySelectorAll('.nav-tab, .tab-content').forEach(el => el.classList.remove('active'));
+                        e.target.classList.add('active');
+                        document.getElementById(target).classList.add('active');
+                        this.currentTab = target;
+                        if (target === 'fainas') this.renderFainas();
+                        if (target === 'pdf') this.renderPdfTab();
+                    };
+                });
+            }
+
+            renderHome() {
+                const container = document.getElementById('categoriesContainer');
+                container.innerHTML = this.db.data.categories.map(cat => `
+                    <div class="category-section">
+                        <div class="category-header">
+                            <div class="category-title-container">
+                                <div class="category-title">${cat.name}</div>
+                                <button class="action-btn" onclick="app.editCategory('${cat.id}')">✎</button>
+                                <button class="action-btn" onclick="app.deleteCategory('${cat.id}')">🗑️</button>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-secondary)">${cat.tasks.length} tarefas</div>
+                        </div>
+                        <div class="tasks-list">
+                            ${cat.tasks.map(task => `
+                                <div class="task-item">
+                                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} 
+                                           onchange="app.toggleTask('${cat.id}', '${task.id}')">
+                                    <div class="task-text" style="${task.completed ? 'text-decoration:line-through; opacity:0.6' : ''}">${task.text}</div>
+                                    <button class="action-btn" onclick="app.editTask('${cat.id}', '${task.id}')">✎</button>
+                                    <button class="action-btn" onclick="app.deleteTask('${cat.id}', '${task.id}')">🗑️</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="add-task-form">
+                            <input type="text" id="input-${cat.id}" placeholder="Nova tarefa...">
+                            <button class="add-task-btn" onclick="app.addTask('${cat.id}')">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            addTask(catId) {
+                const input = document.getElementById('input-' + catId);
+                if (input.value.trim()) {
+                    this.db.addTask(catId, input.value.trim());
+                    input.value = '';
+                    this.renderHome();
+                }
+            }
+
+            toggleTask(catId, taskId) {
+                this.db.toggleTask(catId, taskId);
+                this.renderHome();
+            }
+
+            editTask(catId, taskId) {
+                const cat = this.db.data.categories.find(c => c.id === catId);
+                const task = cat.tasks.find(t => t.id === taskId);
+                const newText = prompt('Editar tarefa:', task.text);
+                if (newText !== null && newText.trim() !== '') {
+                    this.db.editTask(catId, taskId, newText.trim());
+                    this.renderHome();
+                }
+            }
+
+            deleteTask(catId, taskId) {
+                if (confirm('Excluir esta tarefa?')) {
+                    this.db.deleteTask(catId, taskId);
+                    this.renderHome();
+                }
+            }
+
+            editCategory(catId) {
+                const cat = this.db.data.categories.find(c => c.id === catId);
+                const newName = prompt('Editar nome da categoria:', cat.name);
+                if (newName !== null && newName.trim() !== '') {
+                    this.db.editCategory(catId, newName.trim());
+                    this.renderHome();
+                }
+            }
+
+            deleteCategory(catId) {
+                if (confirm('Excluir esta categoria e TODAS as suas tarefas?')) {
+                    this.db.deleteCategory(catId);
+                    this.renderHome();
+                }
+            }
+
+            renderFainas() {
+                const tabs = document.getElementById('fainasTabs');
+                const detail = document.getElementById('fainaDetail');
+                const fainas = this.db.data.fainas;
+
+                if (fainas.length === 0) {
+                    tabs.innerHTML = '';
+                    detail.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary)">Nenhuma faina salva.</div>';
+                    return;
+                }
+
+                if (!this.currentFainaId || !fainas.find(f => f.id === this.currentFainaId)) {
+                    this.currentFainaId = fainas[0].id;
+                }
+
+                tabs.innerHTML = fainas.map(f => `
+                    <button class="faina-tab-btn ${f.id === this.currentFainaId ? 'active' : ''}" 
+                            onclick="app.selectFaina('${f.id}')">${f.name}</button>
+                `).join('');
+
+                const faina = fainas.find(f => f.id === this.currentFainaId);
+                detail.innerHTML = `
+                    <div class="faina-card">
+                        <div class="faina-card-header" style="display:flex; justify-content:space-between; align-items:center">
+                            <div class="faina-card-title">${faina.name}</div>
+                            <button class="btn btn-danger" style="padding:8px 12px; font-size:12px;" onclick="app.deleteFaina('${faina.id}')">Excluir</button>
+                        </div>
+                        <div class="faina-tasks">
+                            ${faina.tasks.map(t => `
+                                <div class="faina-task-item">
+                                    <span style="color:var(--primary)">☐</span>
+                                    <span>${t.text}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            selectFaina(id) {
+                this.currentFainaId = id;
+                this.renderFainas();
+            }
+
+            deleteFaina(id) {
+                if (confirm('Excluir esta faina?')) {
+                    this.db.deleteFaina(id);
+                    this.renderFainas();
+                }
+            }
+
+            openFainaModal() {
+                const container = document.getElementById('taskSelectorContainer');
+                container.innerHTML = this.db.data.categories.map(cat => `
+                    <div style="margin-bottom:15px;">
+                        <div style="font-weight:700; color:var(--primary); font-size:13px; margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:4px;">${cat.name}</div>
+                        ${cat.tasks.map(t => `
+                            <div style="display:flex; gap:10px; margin-bottom:8px; align-items:center">
+                                <input type="checkbox" class="modal-task-check" data-text="${t.text}" onchange="app.updateModalCount()">
+                                <label style="font-size:13px;">${t.text}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+                document.getElementById('fainaName').value = '';
+                this.updateModalCount();
+                document.getElementById('fainaModal').classList.add('show');
+            }
+
+            updateModalCount() {
+                const count = document.querySelectorAll('.modal-task-check:checked').length;
+                document.getElementById('selectedCount').textContent = count + ' selecionadas';
+            }
+
+            saveFaina() {
+                const name = document.getElementById('fainaName').value.trim();
+                const checks = document.querySelectorAll('.modal-task-check:checked');
+                if (!name || checks.length === 0) return alert('Preencha o nome e selecione tarefas');
+
+                const tasks = Array.from(checks).map(c => ({ text: c.dataset.text }));
+                this.db.addFaina({ name, tasks });
+                this.closeModal('fainaModal');
+                this.renderFainas();
+            }
+
+            closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+            renderPdfTab() {
+                const selector = document.getElementById('pdfCheckboxes');
+                const preview = document.getElementById('pdfPreview');
+                const fainas = this.db.data.fainas;
+
+                if (fainas.length === 0) {
+                    selector.innerHTML = 'Nenhuma faina disponível.';
+                    preview.innerHTML = '';
+                    return;
+                }
+
+                selector.innerHTML = fainas.map(f => `
+                    <div style="display:flex; gap:10px; margin-bottom:5px;">
+                        <input type="checkbox" onchange="app.togglePdfFaina('${f.id}')" ${this.selectedFainasForPdf.has(f.id) ? 'checked' : ''}>
+                        <label style="font-size:13px;">${f.name}</label>
+                    </div>
+                `).join('');
+
+                this.updatePdfPreview();
+            }
+
+            togglePdfFaina(id) {
+                if (this.selectedFainasForPdf.has(id)) this.selectedFainasForPdf.delete(id);
+                else this.selectedFainasForPdf.add(id);
+                this.updatePdfPreview();
+            }
+
+            updatePdfPreview() {
+                const preview = document.getElementById('pdfPreview');
+                const selectedIds = Array.from(this.selectedFainasForPdf);
+                const fainasToRender = selectedIds.length > 0 
+                    ? this.db.data.fainas.filter(f => selectedIds.includes(f.id))
+                    : this.db.data.fainas;
+
+                preview.innerHTML = `
+                    <div id="pdfContent">
+                        <h1 style="text-align:center; color:#2563eb; margin-bottom:20px;">⚓ Relatório de Fainas</h1>
+                        <p style="text-align:center; font-size:12px; color:#666; margin-bottom:30px;">Gerado em: ${new Date().toLocaleString()}</p>
+                        ${fainasToRender.map(f => `
+                            <div style="margin-bottom:30px; border:1px solid #eee; padding:15px; border-radius:8px;">
+                                <h2 style="color:#2563eb; font-size:18px; margin-bottom:15px; border-bottom:2px solid #2563eb;">${f.name}</h2>
+                                ${f.tasks.map(t => `<div style="padding:5px 0; font-size:14px;">☐ ${t.text}</div>`).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            downloadPdf() {
+                const element = document.getElementById('pdfContent');
+                const opt = { margin: 1, filename: 'fainas.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+                html2pdf().set(opt).from(element).save();
+            }
+
+            shareWhatsApp() {
+                const selectedIds = Array.from(this.selectedFainasForPdf);
+                const fainas = selectedIds.length > 0 
+                    ? this.db.data.fainas.filter(f => selectedIds.includes(f.id))
+                    : this.db.data.fainas;
+
+                let text = "*⚓ RELATÓRIO DE FAINAS*\n\n";
+                fainas.forEach(f => {
+                    text += `*${f.name.toUpperCase()}*\n`;
+                    f.tasks.forEach(t => text += `☐ ${t.text}\n`);
+                    text += "\n";
+                });
+                
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+            }
+
+            clearAllData() {
+                if (confirm('Deseja apagar TODAS as fainas salvas?')) {
+                    this.db.data.fainas = [];
+                    this.db.saveData();
+                    this.renderFainas();
+                    this.renderPdfTab();
+                }
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
