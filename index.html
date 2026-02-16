@@ -10,8 +10,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Fainas">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1584/1584892.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Offline mode active', reg))
+                    .catch(err => console.log('Offline mode error', err));
+            });
+        }
+    </script>
     <style>
         * {
             margin: 0;
