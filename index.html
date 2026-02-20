@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minhas Tarefas - Sistema de Fainas</title>
-    
-    <!-- PWA Meta Tags para iPhone -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Fainas">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1584/1584892.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    
+<link rel="manifest" href="/Sistema-fainas/manifest.json">
+<meta name="theme-color" content="#000000">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minhas Tarefas – Sistema de Fainas</title>
+    <!-- PWA Meta Tags para iPhone --><!-- PWA Meta Tags para iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Fainas">
+<link rel="apple-touch-icon" href="/Sistema-fainas/icon-192.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -954,5 +953,11 @@
 
         const app = new App();
     </script>
-</body>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/Sistema-fainas/service-worker.js")
+    .then(() => console.log("Service Worker registrado com sucesso"))
+    .catch(error => console.log("Erro no registro:", error));
+}
+</script>
+</</body>
 </html>
