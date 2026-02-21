@@ -13,15 +13,14 @@
 <meta name="apple-mobile-web-app-title" content="Fainas">
 <link rel="apple-touch-icon" href="/Sistema-fainas/icon-192.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Offline mode active', reg))
-                    .catch(err => console.log('Offline mode error', err));
-            });
-        }
-    </script>
+   <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/Sistema-fainas/service-worker.js")
+    .then(() => console.log("Service Worker registrado"))
+    .catch(error => console.log("Erro no registro:", error));
+}
+</script>
     <style>
         * {
             margin: 0;
