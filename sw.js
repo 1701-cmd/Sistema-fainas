@@ -4,9 +4,7 @@ const urlsToCache = [
   './',                    // cacheia a raiz (/)
   './index.html',
   './manifest.json',
-  './script.js',           // seu arquivo principal de lógica (confirme o nome exato)
-  './icon-192.png',
-  './icon-512.png'
+  // seu arquivo principal de lógica (confirme o nome exato)
   // Se você tiver mais arquivos, adicione aqui (exemplos):
   // './css/style.css',                // se tiver pasta css/
   // './js/localforage.min.js',        // se baixou a lib localmente
