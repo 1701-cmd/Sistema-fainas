@@ -3,7 +3,7 @@ const CACHE_NAME = 'fainas-cache-v1';
 const urlsToCache = [
   './',                    // cacheia a raiz (/)
   './index.html',
-  './manifest.json',
+  './manifest.json'
   // seu arquivo principal de lógica (confirme o nome exato)
   // Se você tiver mais arquivos, adicione aqui (exemplos):
   // './css/style.css',                // se tiver pasta css/
