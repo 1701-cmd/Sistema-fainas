@@ -1,4 +1,4 @@
-const CACHE_NAME = "sistema-fainas-v1";
+const CACHE_NAME = "sistema-fainas-v2";
 
 const urlsToCache = [
   "/Sistema-fainas/",
