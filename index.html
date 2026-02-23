@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <link rel="manifest" href="/Sistema-fainas/manifest.json">
 <meta name="theme-color" content="#000000">
 
@@ -511,6 +513,9 @@ if ("serviceWorker" in navigator) {
             <div id="calendario" class="tab-content">
          <h2>📅 Calendário de Tarefas</h2>
        <div id="calendar"></div>
+      <div id="cal" class="tab-content">
+    <div id="calendar"></div>
+</div>
                </div>
             </div>
         </div>
@@ -1035,6 +1040,88 @@ document.addEventListener("DOMContentLoaded", function () {
 
     localStorage.setItem("tarefas", JSON.stringify(eventos));
   }
+
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  let calendar;
+  let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+
+  function iniciarCalendario() {
+    if (calendar) return;
+
+    calendar = new FullCalendar.Calendar(
+      document.getElementById("calendar"),
+      {
+        initialView: "dayGridMonth",
+        locale: "pt-br",
+        height: "auto",
+
+        dateClick: function (info) {
+          const titulo = prompt("Digite a tarefa:");
+          if (titulo) {
+            const evento = {
+              id: Date.now(),
+              title: titulo,
+              start: info.dateStr,
+              color: "#1e90ff"
+            };
+            calendar.addEvent(evento);
+            salvar();
+          }
+        },
+
+        eventClick: function (info) {
+          const opcao = prompt("1-Editar\n2-Excluir\n3-Concluir");
+
+          if (opcao == "1") {
+            const novo = prompt("Editar:", info.event.title);
+            if (novo) {
+              info.event.setProp("title", novo);
+              salvar();
+            }
+          }
+
+          if (opcao == "2") {
+            info.event.remove();
+            salvar();
+          }
+
+          if (opcao == "3") {
+            info.event.setProp("color", "green");
+            salvar();
+          }
+        },
+
+        events: tarefas
+      }
+    );
+
+    calendar.render();
+  }
+
+  function salvar() {
+    const eventos = calendar.getEvents().map(e => ({
+      id: e.id,
+      title: e.title,
+      start: e.startStr,
+      color: e.backgroundColor
+    }));
+    localStorage.setItem("tarefas", JSON.stringify(eventos));
+  }
+
+  // Quando clicar na aba calendário
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.addEventListener("click", function () {
+      if (this.dataset.tab === "cal") {
+        setTimeout(() => {
+          iniciarCalendario();
+        }, 100);
+      }
+    });
+  });
 
 });
 </script>
