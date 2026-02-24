@@ -452,6 +452,9 @@ if ("serviceWorker" in navigator) {
            <div id="calendar"></div>
             <!-- ABA HOME -->
             <div id="home" class="tab-content active">
+              <div id="cal" class="tab-content">
+    <div id="calendar"></div>
+</div>
                 <div id="categoriesContainer" class="categories-container">
                     <!-- Categorias e tarefas serão injetadas aqui -->
                 </div>
@@ -516,9 +519,9 @@ if ("serviceWorker" in navigator) {
                 <!-- ABA CALENDÁRIO -->
             <div id="calendario" class="tab-content">
          <h2>📅 Calendário de Tarefas</h2>
-       <div id="calendar"></div>
+       <div id="cal"></div>
       <div id="cal" class="tab-content">
-    <div id="calendar"></div>
+    <div id="cal"></div>
 </div>
                </div>
             </div>
@@ -979,12 +982,12 @@ if ("serviceWorker" in navigator) {
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  if (!document.getElementById("calendar")) return;
+  if (!document.getElementById("cal")) return;
 
   let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
 
   const calendar = new FullCalendar.Calendar(
-    document.getElementById("calendar"),
+    document.getElementById("cal"),
     {
       initialView: "dayGridMonth",
       locale: "pt-br",
